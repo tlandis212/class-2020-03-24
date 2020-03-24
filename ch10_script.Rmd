@@ -31,7 +31,10 @@ train %>%
 **Prompt:** Create a bootstrap sample of a 1,000 replications of the mean income of the commuters, where each replication draws the appropriate number, with replacement, from the original data.
 
 ```{r scene3}
-
+train %>%
+  rep_sample_n(115, replace = TRUE, reps = 1000) %>%
+  group_by(replicate) %>%
+  summarize(mean_income = mean(income))
 ```
 
 
