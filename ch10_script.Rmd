@@ -19,27 +19,94 @@ library(tidyverse)
 
 **Prompt:** What is the average income of the commuters? How sure can we be of that number? If we were to survey another 115 commuters, what would their average income be? How does this connect to the difference between the harpoon and the net in the book? Don't know? Look it up!
 
+```{r}
+train %>% 
+  summarize(avg_income = mean(income))
+
+```
+
+
 # Scene 3
 
 **Prompt:** Create a bootstrap sample of a 1,000 replications of the mean income of the commuters, where each replication draws the appropriate number, with replacement, from the original data.
+
+```{r scene3}
+
+```
+
+
 
 # Scene 4
 
 **Prompt:** Using the bootstrap sample you create, calculate the 50% confidence interval (using the percentile method) of the true mean income of commuters. What is the meaning of this interval? What does it tell us about the world that we did not know before? Is that the same thing as thinking that there is a 50% chance that, if we were to draw a new commuter at random, that her income would fall within that range? Why or why not? What if, instead of looking at all commuters in the sample, we just looked at the Treated. That is easy to do with a single `filter()`. But would the interpretation of the confidence interval be the same or different?
 
 
+```{r scene4}
+train %>%
+  rep_sample_n(115, replace = TRUE, reps = 1000) %>%
+  group_by(replicate) %>%
+  summarize(mean_income = mean(income)) %>%
+  pull(mean_income) %>%
+  quantile(c(0.25, 0.75))
+
+```
+
 # Scene 5
 
-**Prompt:**  Calculate  the difference between the income of treated and control commuters in our sample. We need to subtract the Control average from the Treated average. To do that, having them on the same row is convenient. Recall the `pivot_*` functions. `everything()` is also a cool trick for organizing the order of the variables in a tibble. I like to put the key variable, which would be the income difference in this case, first.
+**Prompt:**  Calculate the difference between the income of treated and control commuters in our sample. We need to subtract the Control average from the Treated average. To do that, having them on the same row is convenient. Recall the `pivot_*` functions. `everything()` is also a cool trick for organizing the order of the variables in a tibble. I like to put the key variable, which would be the income difference in this case, first.
 
-# Scene 7
+```{r scene5}
+
+train %>%
+  group_by(treatment) %>%
+  summarize(mean_income = mean(income)) %>% 
+  pivot_wider(names_from = treatment, values_from = mean_income) %>% 
+  mutate(Difference = Treated - Control) %>% 
+  select(Difference, everything())
+
+```
+
+# Scene 6
 
 **Prompt:**  Calculate a 95% confidence interval for the difference between the mean income of treated and control commuters in our sample. Provide a Bayesian and Frequentist interpretation of this interval.
+
+```{r scene 6}
+
+train %>% 
+  rep_sample_n(115, replace = TRUE, reps = 1000) %>% 
+  group_by(treatment, replicate) %>% 
+  summarize(mean_income = mean(income)) %>% 
+  pivot_wider(names_from = treatment, values_from = mean_income) %>% 
+  mutate(Difference = Treated - Control) %>% 
+  select(Difference, everything()) %>% 
+  pull(Difference) %>% 
+  quantile(c(.025, .975))
+
+# Baynesian: We're 95% sure that the true difference between mean income in the treated group and in the control mean
+# incomes are between -42587 and 11998.
+
+
+```
+
 
 
 # Scene 8
 
 **Prompt:**  What about the difference between att_chg of the treated and the controls? Calculate the mean difference, just as we did with income. Is this difference "large?" 
+
+```{r}
+
+train %>% 
+  group_by(treatment) %>%
+  summarize(mean_att_chg = mean(att_chg)) %>% 
+  pivot_wider(names_from = treatment, values_from = mean_att_chg) %>% 
+  mutate(Difference = Treated - Control) %>% 
+  select(Difference, everything())
+
+summary(train)
+
+```
+
 
 
 
